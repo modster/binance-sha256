@@ -2,19 +2,26 @@ const crypto = require('crypto');
 const qs = require('qs');
 require('dotenv-vault-core').config()
 
-// to do:
-// async function fetcher(req, res) {
-//     const reqBody = new URLSearchParams(req.body);
-//     console.log(reqBody);
-
-async function fetcher() {
+/**
+ * @function newOrder
+ * @description Create a new order on the Binance Spot REST API.
+ * @param {string} symbol
+ * @param {string} side
+ * @param {string} type
+ * @param {number} quantity
+ * @param {number} price
+ * @returns {Promise<Response>} fetch<response>
+ * @see https://binance-docs.github.io/apidocs/spot/en/#new-order-trade
+ */
+async function newOrder(req) {
     try {
-        const enc = new TextEncoder(); // always utf-8
-        const apiSecret = process.env.TESTNET_SECRET; // always utf-8
-        const apikey = process.env.TESTNET_APIKEY;
-        const restApi = process.env.TESTNET_APIURL;
-        const newOrderEndPoint = '/v3/order';
-        const restApiUrl = `${restApi}${newOrderEndPoint}`;
+        const END_POINT = '/v3/order';
+        const API_URL = process.env.TESTNET_APIURL;
+        const API_SECRET = process.env.TESTNET_SECRET;
+        const API_KEY = process.env.TESTNET_APIKEY;
+        const REQ_URL = `${API_URL}${END_POINT}`;
+        const METHOD = 'POST';
+        const encoder = new TextEncoder();
 
         const data = qs.stringify({
             symbol: 'BTCUSDT',
@@ -29,31 +36,46 @@ async function fetcher() {
 
         function signQuery(query_string) {
             return crypto
-                .createHmac('sha256', enc.encode(apiSecret))
+                .createHmac('sha256', encoder.encode(API_SECRET))
                 .update(query_string)
                 .digest('hex');
         }
 
-        const sQ = signQuery(data);
-        const signedRequest = `${data}&signature=${sQ}`;
+        const signQeryParams = signQuery(data);
+        const signedRequest = `${data}&signature=${signQeryParams}`;
         const headers = new Headers();
-        headers.append('X-MBX-APIKEY', apikey);
+        headers.append('X-MBX-APIKEY', API_KEY);
 
-        const response = await fetch(restApiUrl, {
+        console.log(`
+
+        ~~~~~~~~~~~~~~~~~~~~~~~~ REQUEST ~~~~~~~~~~~~~~~~~~~~~~~~
+        `);
+        console.log(`URL: '${REQ_URL}'`);
+        console.log(`METHOD: ${METHOD}`);
+        console.log(headers.forEach((value, key) => console.log(`HEADERS: ${key}: ${value}`)));
+        console.log(`BODY: ${signedRequest}`);
+
+        const response = await fetch(REQ_URL, {
             method: 'POST',
             headers: headers,
             body: signedRequest,
         });
 
-        console.log(await response.json());
-
+        if (response.ok) {
+            console.log(`
+        ~~~~~~~~~~~~~~~~~~~~~~~~ RESPONSE ~~~~~~~~~~~~~~~~~~~~~~~~
+            `);
+            console.log(await response.json());
+        }
     } catch (error) {
         console.log(error);
     }
 };
 
-fetcher();
-
+newOrder();
 
 // to do:
-// module.exports = fetcher;
+// async function newOrder(req) {
+//     const reqBody = new URLSearchParams(req.body);
+//     console.log(reqBody);
+// module.exports = newOrder;
