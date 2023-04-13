@@ -32,6 +32,7 @@ async function newOrder() {
       .update(query_string)
       .digest("hex");
   }
+  
   try {
     const data = queryString.stringify({
       symbol: "BTCUSDT",
