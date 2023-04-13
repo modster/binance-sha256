@@ -1,0 +1,8 @@
+{
+  "imports": {},
+  "scopes": {
+    "https://esm.sh/v115/": {
+      "side-channel": "https://esm.sh/v115/side-channel@1.0.4"
+    }
+  }
+}
