@@ -1,5 +1,7 @@
 import { load } from "https://deno.land/std@0.183.0/dotenv/mod.ts";
 import crypto from "https://deno.land/std@0.177.0/node/crypto.ts";
+import * as queryString from "https://deno.land/x/querystring@v1.0.2/mod.js";
+
 
 const env = await load();
 const API_URL = "https://testnet.binance.vision/api/v3/order";
@@ -71,7 +73,7 @@ async function handleRequest(request) {
     const json = await request.json();
     const { symbol, side, price, type, closePosition, stopPrice } = json;
     const quantity = 0.001; // to do: get quantity from a sizer function
-    const order = querystring.stringify({
+    const order = queryString.stringify({
       symbol: symbol, // required
       side: side, // required
       price: price, // to do: ignopre values if false || null
