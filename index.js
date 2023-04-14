@@ -1,18 +1,18 @@
-import { load } from "https://deno.land/std@0.183.0/dotenv/mod.ts";
 import crypto from "https://deno.land/std@0.177.0/node/crypto.ts";
+import { load } from "https://deno.land/std@0.183.0/dotenv/mod.ts";
 import * as queryString from "https://deno.land/x/querystring@v1.0.2/mod.js";
 
 
 const env = await load();
-const API_URL = "https://testnet.binance.vision/api/v3/order";
+const API_URL = "https://testnet.binance.vision/api/v3/order";//, "https://api.binance.com/api/v3/order", "https://api.binance.com/api/v3/order"];
 const API_SECRET = env["TESTNET_SECRET"];
 const API_KEY = env["TESTNET_APIKEY"];
 
 /**
- * @listens (fetch) - The event listener for incoming requests.
+ * @listens - The event listener for incoming requests.
  * @event {FetchEvent} event - The fetch event.
  * @handler {Function} handleRequest - The event handler.
- * @param {Request} request
+ * @param request
  * @header {string} content-type - The content-type header.
  */
 addEventListener("fetch", (event) => {
@@ -22,7 +22,7 @@ addEventListener("fetch", (event) => {
 
 /**
  * @function signQuery - Uses the crypto module to sign the query string.
- * @param {string} query_string - The query string to sign.
+ * @param query_string - The query string to sign.
  * @return {string} signature - The signature of the query string.
  */
 const encoder = new TextEncoder();
@@ -35,7 +35,7 @@ function signQuery(query_string) {
 
 /**
  * @function handleRequest - The event handler
- * @param {Request} request
+ * @param request
  * @return {Response} 200 - ok || 400 - Bad Request
  * @description - Handles the request based on the content-type, only accepts
  *                POST requests with a content-type header.
@@ -74,32 +74,32 @@ async function handleRequest(request) {
     const { symbol, side, price, type, closePosition, stopPrice } = json;
     const quantity = 0.001; // to do: get quantity from a sizer function
     const order = queryString.stringify({
-      symbol: symbol, // required
-      side: side, // required
-      price: price, // to do: ignopre values if false || null
-      type: type, // required
-      quantiy: quantity, // required
-      closePosition: closePosition, // to do: ignopre values if false || null
-      stopPrice: stopPrice, // to do: ignopre values if false || null
-      timestamp: Date.now() // required
+      symbol: symbol,
+      side: side,
+      price: price,
+      type: type,
+      quantiy: quantity,
+      closePosition: closePosition,
+      stopPrice: stopPrice,
+      timestamp: Date.now()
     });
 
-    // const url = 'https://api.binance.com/api/v3/order'; //const url = `https://api.binance.com/api/v3/order?${order}&signature=${signature}`;
+    // const url = 'https://api.binance.com/api/v3/order'; 
 
     // Put together a request that contains our order for fetch().
     const signature = signQuery(order);
+    const url = `${API_URL}?${order}&signature=${signature}`;
     const headersInit = new Headers();
     headersInit.append("Content-Type", "application/json; charset=utf-8");
     headersInit.append("X-MBX-APIKEY", API_KEY);
-    const bodyInit = JSON.stringify(`${order}&signature=${signature}`, null, 2);
-    const requestInit = new Request(null, {
+    const requestInit = new Request(url, {
       method: "POST",
       headers: headersInit,
-      body: bodyInit,
+      // body: bodyInit,
     });
 
     // Send the order to the exchange.
-    const sendOrder = await fetch(API_URL, requestInit)
+    const sendOrder = await fetch(requestInit)
       .then(function (res) {
         console.log(res.status, res.statusText);
         return res.json;
@@ -108,11 +108,12 @@ async function handleRequest(request) {
         return err;
       });
 
+
     // to do: add res.json to db here
-    console.log(await sendOrder.json);
+    console.log(await sendOrder.json());
 
     // Tell tradingview that all is well.
-    return new Response(null, {
+    return new Response({
       status: 200,
       statusText: "OK",
     });
